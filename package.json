@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "node_modules/.bin/nodemon ./bin/www",
     "fixtures": "node ./bin/fixtures"
   },
   "dependencies": {
@@ -14,11 +14,15 @@
     "express": "~4.13.1",
     "faker": "^3.0.1",
     "jade": "~1.11.0",
+    "joi": "^6.9.1",
     "lodash": "^3.10.1",
     "mongoose": "^4.2.2",
     "morgan": "~1.6.1",
     "passport": "^0.3.0",
     "passport-http-header-token": "^1.0.0",
     "serve-favicon": "~2.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.7.3"
   }
 }

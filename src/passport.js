@@ -1,10 +1,8 @@
 'use strict';
 
-var _ = require('lodash')
-    , passport = require('passport')
+var passport = require('passport')
     , HTTPHeaderTokenStrategy = require('passport-http-header-token').Strategy
-    , mongoose = require('./mongoose')
-    , config = require('./config');
+    , mongoose = require('./mongoose');
 
 passport.use(new HTTPHeaderTokenStrategy(
     function (token, done) {
