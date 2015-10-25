@@ -96,7 +96,7 @@ router.delete('/item/:id', authenticate(function (req, res) {
 );
 
 /*
- * http POST 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c"
+ * http POST 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" title="hello, Express!", price=10
  */
 router.post('/item', authenticate(function (req, res) {
         validator('item.create', _.pick(req.body, [ 'title', 'price' ]), function (err, value) {

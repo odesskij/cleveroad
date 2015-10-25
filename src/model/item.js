@@ -35,11 +35,11 @@ Item.virtual('created_at').get(function () {
 });
 
 Item.virtual('user_id').get(function () {
-    return this.user.id;
+    return this.user && this.user.id ? this.user.id : undefined;
 });
 
 Item.virtual('image').get(function () {
-    if(!this.file){
+    if(!this.file) {
         return;
     }
     return domain + '/images/' + this.file;
