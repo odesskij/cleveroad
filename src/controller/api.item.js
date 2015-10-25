@@ -7,22 +7,78 @@ var express = require('express')
     , router = express.Router();
 
 
+var serialize = function (item) {
+    return _.extend(_.pick(item, [
+        'id',
+        'created_at',
+        'title',
+        'price',
+        'image',
+        'user_id' ]), {
+        'user': _.pick(item.user, [
+            'id',
+            'phone',
+            'name',
+            'email'
+        ])
+    });
+};
+
 /*
- * http GET 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" name==Odesskij
- * http GET 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" email==gmail
+ * http GET 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" title==lorem
+ * http GET 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" order_by==price
+ * http GET 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" order_type==asc order_by==price
+ * http GET 127.0.0.1:3000/api/item "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" order_type==asc order_by==price title==^magni
  */
 router.get('/item', authenticate(function (req, res) {
-        var query = {};
-        //_.each(_.pick(req.query, ['name', 'email']), function(value, property){
-        //    query[property] = new RegExp(value, 'i')
-        //});
-        Item.find(query, function(err, items){
-            res.json(_.map(items, function(item){
-                return _.pick(item, [ 'id', 'phone', 'name', 'email' ]);
-            }));
+        validator('item.search', _.pick(req.query, [ 'title', 'user_id', 'order_by', 'order_type' ]), function (err, value) {
+            if(err) return errorResponse(req, res, err);
+            var query = {};
+            var sort = {};
+            _.each(_.pick(value, [ 'title' ]), function (value, property) {
+                query[ property ] = new RegExp(value, 'i')
+            });
+
+            sort[ value.order_by ] = value.order_type === 'desc' ? -1 : 1;
+
+            Item.find(query).sort(sort).exec(function (err, items) {
+                res.json(_.map(items, function (item) {
+                    return serialize(item);
+                }));
+            });
         });
     })
 );
 
+/*
+ * http GET 127.0.0.1:3000/api/item/562cd1e1fea33f5664f1c643 "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c"
+ */
+router.get('/item/:id', authenticate(function (req, res) {
+        Item.findOne({_id: req.params.id}, function (err, item) {
+            if(err || !item) {
+                res.status(404).send();
+                return;
+            }
+            res.json(serialize(item));
+        });
+    })
+);
+
+/*
+ * http PUT 127.0.0.1:3000/api/item/562cd1e1fea33f5664f1c643 "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" price=100 title="hello, node!"
+ */
+router.put('/item/:id', authenticate(function (req, res) {
+        validator('item.update', _.pick(req.body, [ 'title', 'price' ]), function (err, value) {
+            if(err) return errorResponse(req, res, err);
+            Item.findOne({_id: req.params.id}, function (err, item) {
+                if(err || !item) return res.status(404).send();
+                _.extend(item, value);
+                item.save(function (err, item) {
+                    res.json(serialize(item));
+                });
+            });
+        });
+    })
+);
 
 module.exports = router;

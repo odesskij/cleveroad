@@ -6,6 +6,15 @@ var express = require('express')
     , User = require('../mongoose').UserModel
     , router = express.Router();
 
+var serialize = function(user){
+    return _.pick(user, [
+        'id',
+        'phone',
+        'name',
+        'email' ]
+    );
+};
+
 /*
  * http POST 127.0.0.1:3000/api/login email=odesskij1992@gmail.com password=password
  */
@@ -45,7 +54,7 @@ router.post('/register',
  * http GET 127.0.0.1:3000/api/me "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c"
  */
 router.get('/me', authenticate(function (req, res) {
-        res.json(_.pick(req.user, [ 'id', 'phone', 'name', 'email' ]));
+        res.json(serialize(req.user));
     })
 );
 
@@ -68,7 +77,7 @@ router.put('/me', authenticate(function (req, res) {
             User.findOne({_id: req.user._id}, function (err, user) {
                 _.extend(user, _.pick(value, [ 'phone', 'name', 'email', 'password' ]));
                 user.save(function(err, user){
-                    res.json(_.pick(user, [ 'id', 'phone', 'name', 'email' ]));
+                    res.json(serialize(user));
                 });
             });
         });
@@ -86,7 +95,7 @@ router.get('/user/:id', authenticate(function (req, res) {
                 return;
             }
 
-            res.json(_.pick(user, [ 'id', 'phone', 'name', 'email' ]));
+            res.json(serialize(user));
         });
     })
 );
@@ -102,7 +111,7 @@ router.get('/user', authenticate(function (req, res) {
         });
         User.find(query, function(err, users){
             res.json(_.map(users, function(user){
-                return _.pick(user, [ 'id', 'phone', 'name', 'email' ]);
+                return serialize(user);
             }));
         });
     })
