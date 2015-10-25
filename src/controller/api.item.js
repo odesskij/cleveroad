@@ -71,11 +71,26 @@ router.put('/item/:id', authenticate(function (req, res) {
         validator('item.update', _.pick(req.body, [ 'title', 'price' ]), function (err, value) {
             if(err) return errorResponse(req, res, err);
             Item.findOne({_id: req.params.id}, function (err, item) {
-                if(err || !item) return res.status(404).send();
+                if(err || !item || (item && item.user_id !== req.user.id)) return res.status(403).send();
                 _.extend(item, value);
                 item.save(function (err, item) {
                     res.json(serialize(item));
                 });
+            });
+        });
+    })
+);
+
+/*
+ * http DELETE 127.0.0.1:3000/api/item/562cd1e1fea33f5664f1c643 "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c"
+ */
+router.delete('/item/:id', authenticate(function (req, res) {
+        Item.findOne({_id: req.params.id}, function (err, item) {
+            if(err || (item && item.user_id !== req.user.id)) return res.status(403).send();
+            if(!item) return res.status(404).send();
+
+            item.remove(function (err) {
+                return res.status(200).send();
             });
         });
     })
