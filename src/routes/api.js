@@ -12,8 +12,8 @@ var express = require('express')
 router.post('/login',
     function (req, res) {
         validator('login', req.body, function (err, value) {
-            User.findOne(_.pick(value, [ 'email', 'password' ]), function (er, user) {
-                if(err || er || !user) return errorResponse(req, res, [
+            User.findOne(_.pick(value, [ 'email' ]), function (er, user) {
+                if(err || er || !user || !(user && user.verifyPassword(value.password))) return errorResponse(req, res, [
                     {
                         "field": "password",
                         "message": "Wrong email or password"
@@ -42,7 +42,7 @@ router.post('/register',
 );
 
 /*
- * http GET 127.0.0.1:3000/api/me "Authorization: Token a13f34bcebb2ec010f4c31b577282745ecd5e64e"
+ * http GET 127.0.0.1:3000/api/me "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c"
  */
 router.get('/me', authenticate(function (req, res) {
         res.json(_.pick(req.user, [ 'id', 'phone', 'name', 'email' ]));
@@ -50,14 +50,14 @@ router.get('/me', authenticate(function (req, res) {
 );
 
 /*
- * http PUT 127.0.0.1:3000/api/me "Authorization: Token a13f34bcebb2ec010f4c31b577282745ecd5e64e"
+ * http PUT 127.0.0.1:3000/api/me "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" phone=+380951514285 name=Odesskij
+ * http PUT 127.0.0.1:3000/api/me "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c" current_password=password new_password=password1
  */
 router.put('/me', authenticate(function (req, res) {
         validator('user.update', _.pick(req.body, [ 'phone', 'name', 'email', 'current_password', 'new_password' ]), function (err, value) {
             if(err) return errorResponse(req, res, err);
-
             if(value.current_password && value.new_password) {
-                if(value.current_password !== req.user.password) {
+                if(!req.user.verifyPassword(value.current_password)) {
                     return errorResponse(req, res, [ {
                         "field": 'current_password',
                         "message": 'Must be valid.'
@@ -65,22 +65,25 @@ router.put('/me', authenticate(function (req, res) {
                 }
                 value.password = value.new_password;
             }
-            User.update({_id: req.user._id}, _.pick(value, [ 'phone', 'name', 'email', 'password' ]), {upsert: true}, function (err, user) {
-                res.json(_.pick(req.user, [ 'id', 'phone', 'name', 'email' ]));
+            User.findOne({_id: req.user._id}, function (err, user) {
+                _.extend(user, _.pick(value, [ 'phone', 'name', 'email', 'password' ]));
+                user.save(function(err, user){
+                    res.json(_.pick(user, [ 'id', 'phone', 'name', 'email' ]));
+                });
             });
         });
     })
 );
 
 /*
- * http GET 127.0.0.1:3000/api/user/562bf63160c2bfb011ac191e "Authorization: Token a13f34bcebb2ec010f4c31b577282745ecd5e64e"
+ * http GET 127.0.0.1:3000/api/user/562bf63160c2bfb011ac191e "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c"
  */
 router.get('/user/:id', authenticate(function (req, res) {
-        User.findOne({_id: req.params.id}, function(err, user){
+        User.findOne({_id: req.params.id}, function (err, user) {
 
-            if(err || !user){
+            if(err || !user) {
                 res.status(404).send();
-                return ;
+                return;
             }
 
             res.json(_.pick(user, [ 'id', 'phone', 'name', 'email' ]));
