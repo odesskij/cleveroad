@@ -4,8 +4,9 @@ var express = require('express')
     , cookieParser = require('cookie-parser')
     , bodyParser = require('body-parser')
     , passport = require('./src/passport')
-    , index = require('./src/routes/index')
-    , api = require('./src/routes/api');
+    , index = require('./src/controller/index')
+    , apiUser = require('./src/controller/api.user')
+    , apiItem = require('./src/controller/api.item')    ;
 
 var app = express();
 
@@ -21,7 +22,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(passport.initialize());
 app.use('/', index);
-app.use('/api', api);
+app.use('/api', apiUser);
+app.use('/api', apiItem);
 
 app.use(function (req, res, next) {
     var err = new Error('Not Found');

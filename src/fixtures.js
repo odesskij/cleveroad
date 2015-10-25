@@ -31,7 +31,25 @@ module.exports = function () {
             token: '268a4392c8ea194b6654960a5290e6bba332e91c'
         });
 
-        me.save();
+        me.save(function(){
+            console.log(arguments)
+        });
+    });
+
+    var Item = mongoose.ItemModel;
+    Item.remove({}, function () {
+        _.each(_.range(0, 20), function () {
+            var model = new Item({
+                title: faker.lorem.words(3).join(' '),
+                price: faker.random.number(),
+                image: faker.image.imageUrl()
+            });
+
+            model.save(function (err, model) {
+                if(err) return log(err);
+                log('Item ', model.toObject({}));
+            });
+        });
     });
 
     _.delay(function () {
