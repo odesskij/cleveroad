@@ -1,10 +1,12 @@
 var express = require('express')
     , router = express.Router()
+    , fs = require('fs')
     , _ = require('lodash')
     , authenticate = require('../authenticate')
     , errorResponse = require('../error_response')
     , validator = require('../validator')
     , Item = require('../mongoose').ItemModel
+    , fileUploads = require('../config').fileUploads
     , upload = require('../upload_storage').single('file');
 
 
@@ -124,10 +126,35 @@ router.post('/item/:id/image', authenticate(function (req, res) {
 
             upload(req, res, function (err) {
                 if(err) return res.status(403).send();
+
+                // remove old file
+                if(item.file) {
+                    fs.unlink(fileUploads + '/' + item.file, _.noop);
+                }
                 _.extend(item, {
                     file: req.file.filename
                 });
-                item.save(function(err, item){
+                item.save(function (err, item) {
+                    if(err) return res.status(403).send();
+                    res.json(serialize(item));
+                });
+            });
+        });
+    })
+);
+/*
+ * http DELETE 127.0.0.1:3000/api/item/562cf36f7692dafd35ea9e87/image "Authorization: Token 268a4392c8ea194b6654960a5290e6bba332e91c"
+ */
+router.delete('/item/:id/image', authenticate(function (req, res) {
+        Item.findOne({_id: req.params.id}).populate('user').exec(function (err, item) {
+
+            if(err || !item || !(item && item.file)) return res.status(404).send();
+            if(req.user.id !== item.user.id) return res.status(403).send();
+
+            fs.unlink(fileUploads + '/' + item.file, function (err) {
+                if(err) return res.status(403).send();
+                item.file = undefined;
+                item.save(function (err, item) {
                     if(err) return res.status(403).send();
                     res.json(serialize(item));
                 });

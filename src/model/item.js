@@ -39,6 +39,9 @@ Item.virtual('user_id').get(function () {
 });
 
 Item.virtual('image').get(function () {
+    if(!this.file){
+        return;
+    }
     return domain + '/images/' + this.file;
 });
 
