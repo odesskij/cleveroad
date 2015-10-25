@@ -42,7 +42,6 @@ module.exports = function () {
                 var model = new Item({
                     title: faker.lorem.words(3).join(' '),
                     price: faker.random.number(),
-                    image: faker.image.imageUrl(),
                     user: me
                 });
 

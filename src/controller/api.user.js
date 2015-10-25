@@ -6,13 +6,30 @@ var express = require('express')
     , User = require('../mongoose').UserModel
     , router = express.Router();
 
-var serialize = function(user){
-    return _.pick(user, [
-        'id',
-        'phone',
-        'name',
-        'email' ]
-    );
+var serialize = function (user, groups, properties) {
+    if(!groups) {
+        groups = [ 'Default' ];
+    }
+    if(!properties) {
+        properties = [];
+    }
+
+    if(_.contains(groups, 'Default')) {
+        properties = _.union(properties, [
+            'id',
+            'phone',
+            'name',
+            'email'
+        ]);
+    }
+
+    if(_.contains(groups, 'token')){
+        properties = _.union(properties, [
+            'token'
+        ]);
+    }
+
+    return _.pick(user, properties);
 };
 
 /*
@@ -28,7 +45,7 @@ router.post('/login',
                         "message": "Wrong email or password"
                     }
                 ]);
-                res.json(_.pick(user, [ 'token' ]));
+                res.json(serialize(user, ['token']));
             });
         });
     }
@@ -38,13 +55,12 @@ router.post('/login',
  */
 router.post('/register',
     function (req, res) {
-        validator('user.create', req.body, function (err, value) {
+        validator('user.create', _.pick(req.body, [ 'email', 'password', 'phone', 'name' ]), function (err, value) {
             if(err) return errorResponse(req, res, err);
-            var u = new User(_.pick(value, [ 'email', 'password', 'phone', 'name' ]));
+            var u = new User(value);
             u.save(function (err, user) {
-                //TODO:
                 if(err) return errorResponse(req, res, err);
-                res.json(_.pick(user, [ 'token' ]))
+                res.json(serialize(user, ['token']))
             });
         });
     }
@@ -76,7 +92,7 @@ router.put('/me', authenticate(function (req, res) {
             }
             User.findOne({_id: req.user._id}, function (err, user) {
                 _.extend(user, _.pick(value, [ 'phone', 'name', 'email', 'password' ]));
-                user.save(function(err, user){
+                user.save(function (err, user) {
                     res.json(serialize(user));
                 });
             });
@@ -106,11 +122,11 @@ router.get('/user/:id', authenticate(function (req, res) {
  */
 router.get('/user', authenticate(function (req, res) {
         var query = {};
-        _.each(_.pick(req.query, ['name', 'email']), function(value, property){
-            query[property] = new RegExp(value, 'i')
+        _.each(_.pick(req.query, [ 'name', 'email' ]), function (value, property) {
+            query[ property ] = new RegExp(value, 'i')
         });
-        User.find(query, function(err, users){
-            res.json(_.map(users, function(user){
+        User.find(query, function (err, users) {
+            res.json(_.map(users, function (user) {
                 return serialize(user);
             }));
         });
