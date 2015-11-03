@@ -3,8 +3,6 @@
 var passport = require('passport');
 
 module.exports = function (action) {
-    //return passport.authenticate('http-header-token', {session: false});
-
     return function (req, res, next) {
         passport.authenticate('http-header-token',  function (err, user) {
             if(err) {

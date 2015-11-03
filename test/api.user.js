@@ -16,6 +16,7 @@ before(function (done) {
 describe('API User', function () {
     var request = supertest('http://localhost:30001/api');
     this.timeout(1000);
+    this.slow(0);
 
     describe('/api/register', function () {
         var valid = {
