@@ -77,9 +77,10 @@ describe('API User', function () {
         });
 
         it('should be success', function (done) {
+            var req = _.pick(user, [ 'email', 'password' ]);
             request
                 .post('/login')
-                .send(_.pick(user, [ 'email', 'password' ]))
+                .send(req)
                 .expect('Content-Type', /json/)
                 .expect(HTTPStatus.OK)
                 .expect(function (res) {
@@ -92,7 +93,11 @@ describe('API User', function () {
 
         _.each([ 'email', 'password' ], function (property) {
             it('should be fail with invalid ' + property, function (done) {
-                var req = _.extend({}, _.pick(user, [ 'email', 'password' ]), _.pick(invalid, [ property ]));
+                var req = _.extend({},
+                    _.pick(user, [ 'email', 'password' ]),
+                    _.pick(invalid, [ property ])
+                );
+
                 request
                     .post('/login')
                     .send(req)
