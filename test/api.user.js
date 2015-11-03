@@ -16,7 +16,7 @@ before(function (done) {
 describe('API User', function () {
     var request = supertest('http://localhost:30001/api');
     this.timeout(1000);
-    this.slow(0);
+    this.slow(50);
 
     describe('/api/register', function () {
         var valid = {
@@ -51,7 +51,7 @@ describe('API User', function () {
                     .expect('Content-Type', /json/)
                     .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
                     .expect(function (res) {
-                        res.body.should.match([ {field: property} ])
+                        res.body.should.match([ {field: property} ]);
                     })
                     .end(done);
             });
@@ -87,7 +87,7 @@ describe('API User', function () {
                 .expect(function (res) {
                     res.body.should.match({
                         token: user.token
-                    })
+                    });
                 })
                 .end(done);
         });
@@ -114,6 +114,37 @@ describe('API User', function () {
                     })
                     .end(done);
             });
-        })
+        });
+    });
+
+    describe('/api/me', function () {
+        var user = {
+            email: 'user@example.com',
+            password: 'password',
+            name: 'User aka user',
+            token: '43c5fdfa6874652521ccd5f3df460b72bc18cfd3'
+        };
+        before(function (done) {
+            var u = new User(user);
+            u.save(done);
+        });
+
+        it('should return user', function (done) {
+            request
+                .get('/me')
+                .set('Authorization', 'Token ' + user.token)
+                .expect('Content-Type', /json/)
+                .expect(HTTPStatus.OK)
+                .expect(function (res) {
+                    res.body.should.match({
+                        id: function (value) {
+                            value.should.be.String()
+                        },
+                        name: user.name,
+                        email: user.email
+                    });
+                })
+                .end(done);
+        });
     });
 });
