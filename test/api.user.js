@@ -1,32 +1,64 @@
+'use strict';
+
 var should = require('should')
-    , request = require('supertest');
-
-describe('API User', function () {
-    var url = 'http://localhost:3020/api';
-
-    it('/register', function (done) {
-        request(url)
-            .post('/register')
-            .send({
-                email: 'tomfun1990@gmail.com',
-                password: 'password',
-                phone: '+380661514285',
-                name: 'Grisha'
-            })
-            .expect(200)
-            .end(function (err, res) {
-                if(err) {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-    });
+    , _ = require('lodash')
+    , supertest = require('supertest')
+    , HTTPStatus = require('http-status')
+    , mongoose = require('../src/mongoose')
+    , User = mongoose.UserModel;
 
 
-    it('/login', function (done) {
+before(function (done) {
+    User.remove({}).then(function () {
         done();
     });
+});
+describe('API User', function () {
+    var request = supertest('http://localhost:30001/api');
+    this.timeout(1000);
+
+    describe('/register', function () {
+        var valid = {
+            email: 'odesskij1992@gmail.com',
+            password: 'password',
+            phone: '+380661514285',
+            name: 'Vladimir Odesskij'
+        };
+
+        var invalid = _.extend({}, valid, {
+            email: 'not_email',
+            password: '',
+            phone: 'not_phone',
+            name: ''
+        });
+
+        it('should /register without error', function (done) {
+            request
+                .post('/register')
+                .send(valid)
+                .expect('Content-Type', /json/)
+                .expect(HTTPStatus.OK)
+                .end(done);
+        });
+
+        _.each([ 'email', 'password', 'phone', 'name' ], function (property) {
+            it('should /register return error with invalid ' + property, function (done) {
+                var data = _.extend({}, valid, _.pick(invalid, [ property ]));
+                request
+                    .post('/register')
+                    .send(data)
+                    .expect('Content-Type', /json/)
+                    .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
+                    .expect(function (res) {
+                        res.body.should.match([ {field: property} ])
+                    })
+                    .end(done);
+            });
+        });
+    });
 
 
+    it('/api/login', function (done) {
+        done();
+    });
 });

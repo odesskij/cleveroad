@@ -31,7 +31,7 @@ module.exports = function () {
             token: '268a4392c8ea194b6654960a5290e6bba332e91c'
         });
 
-        me.save(function(){
+        me.save(function () {
             console.log(arguments)
         });
 
