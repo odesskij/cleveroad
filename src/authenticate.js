@@ -9,8 +9,9 @@ module.exports = function (action) {
                 return next(err);
             }
             if(!user) {
-                res.status(401);
-                return res.send();
+                return res
+                    .status(401)
+                    .send();
             }
             req.logIn(user, {session: false}, function (err) {
                 if(err) {

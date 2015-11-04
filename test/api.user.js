@@ -146,5 +146,26 @@ describe('API User', function () {
                 })
                 .end(done);
         });
+
+        it('should fail with invalid Authorization Token', function (done) {
+            request
+                .get('/me')
+                .set('Authorization', 'Token invalid_token')
+                .expect(HTTPStatus.UNAUTHORIZED)
+                .expect(function (res) {
+                    res.body.should.be.empty();
+                })
+                .end(done);
+        });
+
+        it('should fail without Authorization Token', function (done) {
+            request
+                .get('/me')
+                .expect(HTTPStatus.UNAUTHORIZED)
+                .expect(function (res) {
+                    res.body.should.be.empty();
+                })
+                .end(done);
+        });
     });
 });
