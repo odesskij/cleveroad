@@ -21,10 +21,10 @@
     "multer": "^1.1.0",
     "passport": "^0.3.0",
     "passport-http-header-token": "^1.0.0",
+    "http-status": "^0.2.0",
     "serve-favicon": "~2.3.0"
   },
   "devDependencies": {
-    "http-status": "^0.2.0",
     "mocha": "^2.3.3",
     "nodemon": "^1.7.3",
     "should": "^7.1.1",

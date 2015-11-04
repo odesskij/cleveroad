@@ -2,11 +2,12 @@ var express = require('express')
     , path = require('path')
     , logger = require('morgan')
     , cookieParser = require('cookie-parser')
+    , HTTPStatus = require('http-status')
     , bodyParser = require('body-parser')
     , passport = require('./src/passport')
     , index = require('./src/controller/index')
     , apiUser = require('./src/controller/api.user')
-    , apiItem = require('./src/controller/api.item')    ;
+    , apiItem = require('./src/controller/api.item');
 
 var app = express();
 
@@ -27,13 +28,13 @@ app.use('/api', apiItem);
 
 app.use(function (req, res, next) {
     var err = new Error('Not Found');
-    err.status = 404;
+    err.status(HTTPStatus.NOT_FOUND);
     next(err);
 });
 
 if(app.get('env') === 'development') {
     app.use(function (err, req, res, next) {
-        res.status(err.status || 500);
+        res.status(err.status || HTTPStatus.INTERNAL_SERVER_ERROR);
         res.render('error', {
             message: err.message,
             error: err
@@ -42,7 +43,7 @@ if(app.get('env') === 'development') {
 }
 
 app.use(function (err, req, res, next) {
-    res.status(err.status || 500);
+    res.status(err.status || HTTPStatus.INTERNAL_SERVER_ERROR);
     res.render('error', {
         message: err.message,
         error: {}

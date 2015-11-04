@@ -2,6 +2,7 @@ var express = require('express')
     , router = express.Router()
     , fs = require('fs')
     , _ = require('lodash')
+    , HTTPStatus = require('http-status')
     , authenticate = require('../authenticate')
     , errorResponse = require('../error_response')
     , validator = require('../validator')
@@ -58,7 +59,7 @@ router.get('/item', authenticate(function (req, res) {
  */
 router.get('/item/:id', authenticate(function (req, res) {
         Item.findOne({_id: req.params.id}).populate('user').exec(function (err, item) {
-            if(err || !item) return res.status(404).send();
+            if(err || !item) return res.status(HTTPStatus.NOT_FOUND).send();
             res.json(serialize(item));
         });
     })
@@ -71,7 +72,7 @@ router.put('/item/:id', authenticate(function (req, res) {
         validator('item.update', _.pick(req.body, [ 'title', 'price' ]), function (err, value) {
             if(err) return errorResponse(req, res, err);
             Item.findOne({_id: req.params.id}).populate('user').exec(function (err, item) {
-                if(err || !item || (item && item.user_id !== req.user.id)) return res.status(403).send();
+                if(err || !item || (item && item.user_id !== req.user.id)) return res.status(HTTPStatus.FORBIDDEN).send();
                 _.extend(item, value);
                 item.save(function (err, item) {
                     res.json(serialize(item));
@@ -86,7 +87,7 @@ router.put('/item/:id', authenticate(function (req, res) {
  */
 router.delete('/item/:id', authenticate(function (req, res) {
         Item.findOne({_id: req.params.id}, function (err, item) {
-            if(err || (item && item.user_id !== req.user.id)) return res.status(403).send();
+            if(err || (item && item.user_id !== req.user.id)) return res.status(HTTPStatus.FORBIDDEN).send();
             if(!item) return res.status(404).send();
             item.remove(function (err) {
                 return res.status(200).send();
@@ -108,7 +109,7 @@ router.post('/item', authenticate(function (req, res) {
 
             var item = new Item(value);
             item.save(function (err, item) {
-                if(err) return res.status(403).send();
+                if(err) return res.status(HTTPStatus.FORBIDDEN).send();
 
                 res.json(serialize(item));
             });
@@ -121,11 +122,11 @@ router.post('/item', authenticate(function (req, res) {
  */
 router.post('/item/:id/image', authenticate(function (req, res) {
         Item.findOne({_id: req.params.id}).populate('user').exec(function (err, item) {
-            if(err || !item) return res.status(404).send();
-            if(req.user.id !== item.user.id) return res.status(403).send();
+            if(err || !item) return res.status(HTTPStatus.NOT_FOUND).send();
+            if(req.user.id !== item.user.id) return res.status(HTTPStatus.FORBIDDEN).send();
 
             upload(req, res, function (err) {
-                if(err) return res.status(403).send();
+                if(err) return res.status(HTTPStatus.FORBIDDEN).send();
 
                 // remove old file
                 if(item.file) {
@@ -135,7 +136,7 @@ router.post('/item/:id/image', authenticate(function (req, res) {
                     file: req.file.filename
                 });
                 item.save(function (err, item) {
-                    if(err) return res.status(403).send();
+                    if(err) return res.status(HTTPStatus.FORBIDDEN).send();
                     res.json(serialize(item));
                 });
             });
@@ -148,14 +149,14 @@ router.post('/item/:id/image', authenticate(function (req, res) {
 router.delete('/item/:id/image', authenticate(function (req, res) {
         Item.findOne({_id: req.params.id}).populate('user').exec(function (err, item) {
 
-            if(err || !item || !(item && item.file)) return res.status(404).send();
-            if(req.user.id !== item.user.id) return res.status(403).send();
+            if(err || !item || !(item && item.file)) return res.status(HTTPStatus.NOT_FOUND).send();
+            if(req.user.id !== item.user.id) return res.status(HTTPStatus.FORBIDDEN).send();
 
             fs.unlink(fileUploads + '/' + item.file, function (err) {
-                if(err) return res.status(403).send();
+                if(err) return res.status(HTTPStatus.FORBIDDEN).send();
                 item.file = undefined;
                 item.save(function (err, item) {
-                    if(err) return res.status(403).send();
+                    if(err) return res.status(HTTPStatus.FORBIDDEN).send();
                     res.json(serialize(item));
                 });
             });

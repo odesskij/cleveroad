@@ -1,16 +1,17 @@
 'use strict';
 
-var passport = require('passport');
+var passport = require('passport')
+    , HTTPStatus = require('http-status');
 
 module.exports = function (action) {
     return function (req, res, next) {
-        passport.authenticate('http-header-token',  function (err, user) {
+        passport.authenticate('http-header-token', function (err, user) {
             if(err) {
                 return next(err);
             }
             if(!user) {
                 return res
-                    .status(401)
+                    .status(HTTPStatus.UNAUTHORIZED)
                     .send();
             }
             req.logIn(user, {session: false}, function (err) {

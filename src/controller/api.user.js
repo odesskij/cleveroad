@@ -1,5 +1,6 @@
 var express = require('express')
     , _ = require('lodash')
+    , HTTPStatus = require('http-status')
     , authenticate = require('../authenticate')
     , errorResponse = require('../error_response')
     , validator = require('../validator')
@@ -107,7 +108,7 @@ router.get('/user/:id', authenticate(function (req, res) {
         User.findOne({_id: req.params.id}, function (err, user) {
 
             if(err || !user) {
-                res.status(404).send();
+                res.status(HTTPStatus.NOT_FOUND).send();
                 return;
             }
 
