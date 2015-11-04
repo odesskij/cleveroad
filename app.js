@@ -28,7 +28,7 @@ app.use('/api', apiItem);
 
 app.use(function (req, res, next) {
     var err = new Error('Not Found');
-    err.status(HTTPStatus.NOT_FOUND);
+    err.status = HTTPStatus.NOT_FOUND;
     next(err);
 });
 
