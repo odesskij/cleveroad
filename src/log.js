@@ -8,6 +8,8 @@ module.exports = function (channel) {
     return function () {
         var args = _.toArray(arguments);
         args.unshift(prefix);
-        console.log.apply(console, args)
+        if(process.env.NODE_ENV === 'dev') {
+            console.log.apply(console, args)
+        }
     }
 };

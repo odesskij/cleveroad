@@ -14,7 +14,7 @@ before(function (done) {
     });
 });
 describe('API User', function () {
-    var request = supertest('http://localhost:30001/api');
+    var request = supertest(require('../app'));
     this.timeout(1000);
     this.slow(50);
 
@@ -35,7 +35,7 @@ describe('API User', function () {
 
         it('should save without error', function (done) {
             request
-                .post('/register')
+                .post('/api/register')
                 .send(valid)
                 .expect('Content-Type', /json/)
                 .expect(HTTPStatus.OK)
@@ -46,7 +46,7 @@ describe('API User', function () {
             it('should return error with invalid ' + property, function (done) {
                 var data = _.extend({}, valid, _.pick(invalid, [ property ]));
                 request
-                    .post('/register')
+                    .post('/api/register')
                     .send(data)
                     .expect('Content-Type', /json/)
                     .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -80,7 +80,7 @@ describe('API User', function () {
         it('should be success', function (done) {
             var req = _.pick(user, [ 'email', 'password' ]);
             request
-                .post('/login')
+                .post('/api/login')
                 .send(req)
                 .expect('Content-Type', /json/)
                 .expect(HTTPStatus.OK)
@@ -100,7 +100,7 @@ describe('API User', function () {
                 );
 
                 request
-                    .post('/login')
+                    .post('/api/login')
                     .send(req)
                     .expect('Content-Type', /json/)
                     .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
@@ -131,7 +131,7 @@ describe('API User', function () {
 
         it('should return user', function (done) {
             request
-                .get('/me')
+                .get('/api/me')
                 .set('Authorization', 'Token ' + user.token)
                 .expect('Content-Type', /json/)
                 .expect(HTTPStatus.OK)
@@ -149,7 +149,7 @@ describe('API User', function () {
 
         it('should fail with invalid Authorization Token', function (done) {
             request
-                .get('/me')
+                .get('/api/me')
                 .set('Authorization', 'Token invalid_token')
                 .expect(HTTPStatus.UNAUTHORIZED)
                 .expect(function (res) {
@@ -160,7 +160,7 @@ describe('API User', function () {
 
         it('should fail without Authorization Token', function (done) {
             request
-                .get('/me')
+                .get('/api/me')
                 .expect(HTTPStatus.UNAUTHORIZED)
                 .expect(function (res) {
                     res.body.should.be.empty();
