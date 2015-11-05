@@ -1,7 +1,6 @@
 'use strict';
 
-var should = require('should')
-    , _ = require('lodash')
+var  _ = require('lodash')
     , supertest = require('supertest')
     , HTTPStatus = require('http-status')
     , mongoose = require('../src/mongoose')
