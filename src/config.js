@@ -8,6 +8,7 @@ var config = {
         domain: 'http://127.0.0.1:3000',
         mongodb: {
             host: 'localhost',
+            port: 27017,
             database: 'cleveroad_dev'
         },
         fileUploads: __dirname + '/../public/images'
@@ -16,6 +17,7 @@ var config = {
         domain: 'http://127.0.0.1:3000',
         mongodb: {
             host: 'localhost',
+            port: 27017,
             database: 'cleveroad_test'
         },
         fileUploads: __dirname + '/../public/images'

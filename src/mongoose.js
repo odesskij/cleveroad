@@ -7,11 +7,11 @@ var mongoose = require('mongoose')
     , config = require('./config')
     , log = require('./log')('mongodb');
 
-mongoose.connect('mongodb://' + config.mongodb.host + '/' + config.mongodb.database);
+mongoose.connect('mongodb://' + config.mongodb.host + ':' + config.mongodb.port + '/' + config.mongodb.database);
 var db = mongoose.connection;
 
 db.on('error', function (err) {
-    log('Error --', err.err.message);
+    log('Error --', err);
 });
 
 db.once('open', function () {

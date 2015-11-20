@@ -30,14 +30,14 @@ var User = new Schema({
     salt: {
         type: String,
         required: true,
-        default: function(){
+        default: function () {
             return idGenerator();
         }
     },
     token: {
         type: String,
         required: true,
-        default: function(){
+        default: function () {
             return idGenerator();
         }
     }

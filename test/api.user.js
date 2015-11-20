@@ -7,13 +7,27 @@ var _ = require('lodash')
     , User = mongoose.UserModel;
 
 
+var request = supertest(require('../app'));
+
+var UNAUTHORIZED = '​unauthorized without invalid token';
+var testUnauthorized = function testUnauthorized(url, method) {
+    return function (done) {
+        request[method](url)
+            .set('Authorization', 'Token fake_token')
+            .expect(HTTPStatus.UNAUTHORIZED)
+            .expect(function (res) {
+                res.body.should.be.empty();
+            })
+            .end(done)
+    };
+};
+
 before(function (done) {
     User.remove({}).then(function () {
         done();
     });
 });
 describe('API User', function () {
-    var request = supertest(require('../app'));
     this.timeout(1000);
     this.slow(50);
 
@@ -168,63 +182,76 @@ describe('API User', function () {
                     .end(done);
             });
 
-            it('​unauthorized with invalid token', function (done) {
-                request
-                    .get('/api/me')
-                    .set('Authorization', 'Token fake_token')
-                    .expect(HTTPStatus.UNAUTHORIZED)
-                    .expect(function (res) {
-                        res.body.should.be.empty();
-                    })
-                    .end(done);
-            });
-        });
+            it(UNAUTHORIZED, testUnauthorized('/api/me', 'get'));
 
-        describe('PUT /api/me', function () {
-            var user = {
-                email: 'user@example.com',
-                password: 'password',
-                phone: '+380661514000',
-                name: 'User aka user',
-                token: '43c5fdfa6874652521ccd5f3df460b72bc18cfd3'
-            };
+            describe('PUT /api/me', function () {
+                var user = {
+                    email: 'user@example.com',
+                    password: 'password',
+                    phone: '+380661514000',
+                    name: 'User aka user',
+                    token: '43c5fdfa6874652521ccd5f3df460b72bc18cfd3'
+                };
 
-            var updatedUser = {
-                email: 'foo@bar.com',
-                phone: '+380951514000',
-                name: 'Foo bar'
-            };
-            beforeEach(function (done) {
-                User.remove().then(function () {
-                    var u = new User(user);
-                    return u.save();
-                }).then(function () {
-                    done();
+                var updatedUser = {
+                    email: 'foo@bar.com',
+                    phone: '+380951514000',
+                    name: 'Foo bar'
+                };
+                beforeEach(function (done) {
+                    User.remove().then(function () {
+                        var u = new User(user);
+                        return u.save();
+                    }).then(function () {
+                        done();
+                    });
                 });
-            });
 
-            it('should be updated', function (done) {
-                request
-                    .put('/api/me')
-                    .set('Authorization', 'Token ' + user.token)
-                    .send(updatedUser)
-                    .expect('Content-Type', /json/)
-                    .expect(HTTPStatus.OK)
-                    .expect(function (res) {
-                        res.body.should.match({
-                            id: function (it) {
-                                it.should.be.a.String().and.not.be.empty()
-                            },
-                            phone: updatedUser.phone,
-                            name: updatedUser.name
-                        });
-                    })
-                    .end(done);
-            });
+                it('should be updated', function (done) {
+                    request
+                        .put('/api/me')
+                        .set('Authorization', 'Token ' + user.token)
+                        .send(updatedUser)
+                        .expect('Content-Type', /json/)
+                        .expect(HTTPStatus.OK)
+                        .expect(function (res) {
+                            res.body.should.match({
+                                id: function (it) {
+                                    it.should.be.a.String().and.not.be.empty()
+                                },
+                                phone: updatedUser.phone,
+                                name: updatedUser.name
+                            });
+                        })
+                        .end(done);
+                });
 
-            _.each([ 'phone', 'name', 'email' ], function (property) {
-                it('property ' + property + ' should be optional', function (done) {
-                    var req = _.omit(updatedUser, [ property ]);
+                _.each([ 'phone', 'name', 'email' ], function (property) {
+                    it('property ' + property + ' should be optional', function (done) {
+                        var req = _.omit(updatedUser, [ property ]);
+                        request
+                            .put('/api/me')
+                            .set('Authorization', 'Token ' + user.token)
+                            .send(req)
+                            .expect('Content-Type', /json/)
+                            .expect(HTTPStatus.OK)
+                            .expect(function (res) {
+                                res.body.should.match(_.extend({
+                                        id: function (it) {
+                                            it.should.be.a.String().and.not.be.empty()
+                                        }
+                                    }, req
+                                ));
+                            })
+                            .end(done);
+                    });
+                });
+
+                it('update password', function (done) {
+                    var req = _.extend({}, updatedUser, {
+                        new_password: 'my_new_password',
+                        current_password: user.password
+                    });
                     request
                         .put('/api/me')
                         .set('Authorization', 'Token ' + user.token)
@@ -236,89 +263,57 @@ describe('API User', function () {
                                     id: function (it) {
                                         it.should.be.a.String().and.not.be.empty()
                                     }
-                                }, req
+                                },
+                                updatedUser
                             ));
                         })
                         .end(done);
                 });
-            });
 
-            it('update password', function (done) {
-                var req = _.extend({}, updatedUser, {
-                    new_password: 'my_new_password',
-                    current_password: user.password
-                });
-                request
-                    .put('/api/me')
-                    .set('Authorization', 'Token ' + user.token)
-                    .send(req)
-                    .expect('Content-Type', /json/)
-                    .expect(HTTPStatus.OK)
-                    .expect(function (res) {
-                        res.body.should.match(_.extend({
-                                id: function (it) {
-                                    it.should.be.a.String().and.not.be.empty()
+                it('current_password is required if new_password not empty', function (done) {
+                    var req = _.extend({}, updatedUser, {
+                        new_password: 'my_new_password'
+                    });
+                    request
+                        .put('/api/me')
+                        .set('Authorization', 'Token ' + user.token)
+                        .send(req)
+                        .expect('Content-Type', /json/)
+                        .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
+                        .expect(function (res) {
+                            res.body.should.match([ {
+                                field: function (it) {
+                                    it.should.be.a.String();
+                                },
+                                message: function (it) {
+                                    it.should.be.a.String();
                                 }
-                            },
-                            updatedUser
-                        ));
-                    })
-                    .end(done);
-            });
-
-            it('current_password is required if new_password not empty', function (done) {
-                var req = _.extend({}, updatedUser, {
-                    new_password: 'my_new_password'
+                            } ]);
+                        })
+                        .end(done);
                 });
-                request
-                    .put('/api/me')
-                    .set('Authorization', 'Token ' + user.token)
-                    .send(req)
-                    .expect('Content-Type', /json/)
-                    .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
-                    .expect(function (res) {
-                        res.body.should.match([ {
-                            field: function (it) {
-                                it.should.be.a.String();
-                            },
-                            message: function (it) {
-                                it.should.be.a.String();
-                            }
-                        } ]);
-                    })
-                    .end(done);
-            });
 
-            it('check current_password', function (done) {
-                var req = _.extend({}, updatedUser, {
-                    new_password: 'my_new_password',
-                    current_password: 'fake password'
+                it('check current_password', function (done) {
+                    var req = _.extend({}, updatedUser, {
+                        new_password: 'my_new_password',
+                        current_password: 'fake password'
+                    });
+                    request
+                        .put('/api/me')
+                        .set('Authorization', 'Token ' + user.token)
+                        .send(req)
+                        .expect('Content-Type', /json/)
+                        .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
+                        .expect(function (res) {
+                            res.body.should.match([ {
+                                field: 'current_password',
+                                message: 'Wrong current password'
+                            } ]);
+                        })
+                        .end(done);
                 });
-                request
-                    .put('/api/me')
-                    .set('Authorization', 'Token ' + user.token)
-                    .send(req)
-                    .expect('Content-Type', /json/)
-                    .expect(HTTPStatus.UNPROCESSABLE_ENTITY)
-                    .expect(function (res) {
-                        res.body.should.match([ {
-                            field: 'current_password',
-                            message: 'Wrong current password'
-                        } ]);
-                    })
-                    .end(done);
-            });
 
-            it('​unauthorized without invalid token', function (done) {
-                request
-                    .put('/api/me')
-                    .send(updatedUser)
-                    .set('Authorization', 'Token fake_token')
-                    .expect(HTTPStatus.UNAUTHORIZED)
-                    .expect(function (res) {
-                        res.body.should.be.empty();
-                    })
-                    .end(done);
+                it(UNAUTHORIZED, testUnauthorized('/api/me', 'put'));
             });
         });
     });

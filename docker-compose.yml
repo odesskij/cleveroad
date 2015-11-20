@@ -1,0 +1,11 @@
+web:
+  build: .
+  ports:
+   - "10000:3000"
+  command: "node /code/bin/www"
+  volumes:
+   - .:/code
+  links:
+   - mongo
+mongo:
+  image: mongo:3.0.7
