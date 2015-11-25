@@ -16,15 +16,16 @@
     "debug": "~2.2.0",
     "express": "~4.13.1",
     "faker": "^3.0.1",
+    "http-status": "^0.2.0",
     "jade": "~1.11.0",
     "joi": "^6.9.1",
     "lodash": "^3.10.1",
+    "log4js": "^0.6.28",
     "mongoose": "^4.2.2",
     "morgan": "~1.6.1",
     "multer": "^1.1.0",
     "passport": "^0.3.0",
     "passport-http-header-token": "^1.0.0",
-    "http-status": "^0.2.0",
     "serve-favicon": "~2.3.0"
   },
   "devDependencies": {
