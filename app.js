@@ -22,7 +22,8 @@ log4js.configure({
 
 var log = log4js.getLogger('cheese');
 
-log.setLevel('TRACE');
+log.setLevel(log4js.levels.TRACE);
+
 log.trace('Entering cheese testing');
 log.debug('Got cheese.');
 log.info('Cheese is Gouda.');
@@ -38,10 +39,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 if(process.env.NODE_ENV === 'dev') {
-    app.use(log4js.connectLogger(log, {level: 'TRACE'}));
+
+    app.use(log4js.connectLogger(log, {level: log4js.levels.ALL}));
 }
 
-app.use(log4js.connectLogger(log, {level: 'TRACE'}));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
