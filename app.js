@@ -2,7 +2,6 @@
 
 var express = require('express')
     , path = require('path')
-    , logger = require('morgan')
     , log4js = require('log4js')
     , cookieParser = require('cookie-parser')
     , HTTPStatus = require('http-status')
@@ -14,13 +13,12 @@ var express = require('express')
 
 log4js.configure({
     appenders: [
-        {type: 'console'},
-        {type: 'file', filename: 'app/logs/cheese.log', category: 'cheese', "backups": 3}
+        {type: 'console'}
     ]
 });
 
 
-var log = log4js.getLogger('cheese');
+var log = log4js.getLogger('console');
 
 log.setLevel(log4js.levels.TRACE);
 
@@ -39,7 +37,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 if(process.env.NODE_ENV === 'dev') {
-
     app.use(log4js.connectLogger(log, {level: log4js.levels.ALL}));
 }
 

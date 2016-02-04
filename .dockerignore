@@ -1,0 +1,10 @@
+# IDE
+.idea
+*.iml
+
+# Vagrant
+.vagrant
+
+#git
+.gitignore
+.git

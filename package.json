@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node_modules/.bin/nodemon ./bin/www",
+    "serve": "node_modules/.bin/nodemon ./bin/www",
     "test": "env NODE_ENV=test ./node_modules/.bin/mocha -r should",
     "coverage": "env NODE_ENV=test ./node_modules/.bin/mocha -r jscoverage -r should",
     "coverage-html": "env NODE_ENV=test ./node_modules/.bin/mocha -r jscoverage -r should -R html-cov > coverage.html",
@@ -26,6 +26,7 @@
     "multer": "^1.1.0",
     "passport": "^0.3.0",
     "passport-http-header-token": "^1.0.0",
+    "pm2": "^1.0.0",
     "serve-favicon": "~2.3.0"
   },
   "devDependencies": {

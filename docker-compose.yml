@@ -1,0 +1,11 @@
+api:
+  build: .
+  command: npm run serve
+  ports:
+    - "3001:3000"
+  links:
+    - mongo
+  environment:
+    APP_MONGODB_HOST: mongo
+mongo:
+  image: mongo
